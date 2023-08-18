@@ -91,35 +91,24 @@ class check_chatgpt:
         curr = conn.cursor()
         
         try:
-            
             # time record
             now_day  = time.strftime("%Y-%m-%d" , time.localtime())
             now_time = time.strftime("%H:%M:%S" , time.localtime())
 
-            check_sql = "show tables"
-            curr.execute(check_sql)
-            check_res = curr.fetchall()
+            sql  = "create table `{0}`(no int not null primary key AUTO_INCREMENT,r_date date null,r_time time null,d_name varchar(100) null,u_file varchar(100) null,f_size varchar(50) null,r_status varchar(50) null)ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci".format(now_day)
+            curr.execute(sql)
+            conn.commit()
             
-            for tables in check_res:
-                
-                if tables[0] == now_day:
-
-                    f_size = str(f_size) + str(' MB')
-                    sql  = "insert into `{5}`(r_date , r_time , d_name , u_file , r_status , f_size ) value('{0}' , '{1}' , '{2}' , '{3}' , '{4}', '{6}')".format(now_day , now_time , dir_name , upload_file , r_status , now_day , f_size)
-                    curr.execute(sql)
-                    conn.commit()
-
-                    logging.info(f'add data to tb : {now_day} successful.')
-
-                else:
-                    sql  = "create table `{0}`(no int not null primary key AUTO_INCREMENT,r_date date null,r_time time null,d_name varchar(100) null,u_file varchar(100) null,f_size varchar(50) null,r_status varchar(50) null)ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci".format(now_day)
-                    curr.execute(sql)
-                    conn.commit()
-                    
-                    logging.info(f'create tb : {now_day} successful.')
+            logging.info(f'create tb : {now_day} successful.')
 
         except Exception as e:
-            logging.info('< Error > backup_nas_db_record : ' + str(e))
+            f_size = str(f_size) + str(' MB')
+            sql  = "insert into `{5}`(r_date , r_time , d_name , u_file , r_status , f_size ) value('{0}' , '{1}' , '{2}' , '{3}' , '{4}', '{6}')".format(now_day , now_time , dir_name , upload_file , r_status , now_day , f_size)
+            curr.execute(sql)
+            conn.commit()
+
+            logging.info(f'add data to tb : {now_day} successful.')
+
         finally:
             conn.close()
 
@@ -334,11 +323,11 @@ class check_chatgpt:
                     ########################
                     try:
                         psftp.chdir(dir_name)
-                        logging.info(f'{dir_name} - upload starting...')
+                        logging.info(f'{dir_name}/{upload_file} - upload starting...')
                         try:
                             psftp.remove(upload_file)
                             psftp.put(upload_file)
-                            logging.info(f'{dir_name} - upload finish.')
+                            logging.info(f'{dir_name}/{upload_file} - upload finish.')
                             
                             ### backup nas record mysql
                             f_size = round((psftp.stat(upload_file).st_size)/1024/1024 , 2)
@@ -346,31 +335,31 @@ class check_chatgpt:
 
                         except FileNotFoundError:
                             psftp.put(upload_file)
-                            logging.info(f'{dir_name} - upload finish.')
+                            logging.info(f'{dir_name}/{upload_file} - upload finish.')
                             
                             ### backup nas record mysql
                             f_size = round((psftp.stat(upload_file).st_size)/1024/1024 , 2)
                             self.backup_nas_db_record(dir_name , upload_file , f_size , 'ok')
 
                     except FileNotFoundError:
-                        logging.info(f'{dir_name} - upload starting...') 
+                        logging.info(f'{dir_name}/{upload_file} - upload starting...') 
                         psftp.mkdir(dir_name)
                         psftp.chdir(dir_name)
                         psftp.put(upload_file)
-                        logging.info(f'{dir_name} - upload finish.')
+                        logging.info(f'{dir_name}/{upload_file} - upload finish.')
                         
                         ### backup nas record mysql
                         f_size = round((psftp.stat(upload_file).st_size)/1024/1024 , 2)
                         self.backup_nas_db_record(dir_name , upload_file , f_size , 'ok')
                 
                 except FileNotFoundError:
-                    logging.info(f'{dir_name} - upload starting...')
+                    logging.info(f'{dir_name}/{upload_file} - upload starting...')
                     psftp.mkdir(now_day)
                     psftp.chdir(now_day)
                     psftp.mkdir(dir_name)
                     psftp.chdir(dir_name)
                     psftp.put(upload_file)
-                    logging.info(f'{dir_name} - upload finish.')
+                    logging.info(f'{dir_name}/{upload_file} - upload finish.')
                     
                     ### backup nas record mysql
                     f_size = round((psftp.stat(upload_file).st_size)/1024/1024 , 2)
@@ -418,12 +407,13 @@ if __name__ == '__main__':
         pwd  = 'ej/ck4vupvu3!'    
 
         dir_1  = 'server_1'
-        upload = {'upload_file1':'20230817.mp4','upload_file2':'20230428-PGM.mp4'}
+        upload = {'upload_file1':'20230817.mp4','upload_file2':'20230428-PGM.mp4','upload_file3':'20230816.mp4'}
         
         #for i in range(1,50):
         #    dir = 'server_' + str(i)
         res_chat.backup_qsan_nas(host , port , user , pwd , dir_1 , upload['upload_file1'])
-        
+        res_chat.backup_qsan_nas(host , port , user , pwd , dir_1 , upload['upload_file2'])
+        res_chat.backup_qsan_nas(host , port , user , pwd , dir_1 , upload['upload_file3'])
         time.sleep(60)
         
         
