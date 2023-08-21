@@ -92,22 +92,23 @@ class check_chatgpt:
         
         try:
             # time record
-            now_day  = time.strftime("%Y-%m-%d" , time.localtime())
+            now_day  = time.strftime("%Y-%m" , time.localtime())
+            now_day2 = time.strftime("%Y-%m-%d" , time.localtime())
             now_time = time.strftime("%H:%M:%S" , time.localtime())
 
             sql  = "create table `{0}`(no int not null primary key AUTO_INCREMENT,r_date date null,r_time time null,d_name varchar(100) null,u_file varchar(100) null,f_size varchar(50) null,r_status varchar(50) null)ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci".format(now_day)
             curr.execute(sql)
             conn.commit()
             
-            logging.info(f'create tb : {now_day} successful.')
+            logging.info(f'create tb : {now_day2} successful.')
 
         except Exception as e:
             f_size = str(f_size) + str(' MB')
-            sql  = "insert into `{5}`(r_date , r_time , d_name , u_file , r_status , f_size ) value('{0}' , '{1}' , '{2}' , '{3}' , '{4}', '{6}')".format(now_day , now_time , dir_name , upload_file , r_status , now_day , f_size)
+            sql  = "insert into `{5}`(r_date , r_time , d_name , u_file , r_status , f_size ) value('{0}' , '{1}' , '{2}' , '{3}' , '{4}', '{6}')".format(now_day2 , now_time , dir_name , upload_file , r_status , now_day , f_size)
             curr.execute(sql)
             conn.commit()
 
-            logging.info(f'add data to tb : {now_day} successful.')
+            logging.info(f'add data to tb : {now_day2} successful.')
 
         finally:
             conn.close()
@@ -406,14 +407,14 @@ if __name__ == '__main__':
         user = 'admin'
         pwd  = 'ej/ck4vupvu3!'    
 
-        dir_1  = 'server_1'
+        dir    = {'d_1':'server_1' , 'd_2':'server_2' , 'd_3':'server_3'}
         upload = {'upload_file1':'20230817.mp4','upload_file2':'20230428-PGM.mp4','upload_file3':'20230816.mp4'}
         
         #for i in range(1,50):
         #    dir = 'server_' + str(i)
-        res_chat.backup_qsan_nas(host , port , user , pwd , dir_1 , upload['upload_file1'])
-        res_chat.backup_qsan_nas(host , port , user , pwd , dir_1 , upload['upload_file2'])
-        res_chat.backup_qsan_nas(host , port , user , pwd , dir_1 , upload['upload_file3'])
+        res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_1'] , upload['upload_file1'])
+        res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_2'] , upload['upload_file2'])
+        res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_3'] , upload['upload_file3'])
         time.sleep(60)
         
         
