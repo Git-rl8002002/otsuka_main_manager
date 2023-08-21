@@ -8,7 +8,7 @@
 import requests , logging , time , pymysql , socket , sys , openai , csv , psutil , speedtest , os
 from variables import *
 from pysnmp.hlapi import *
-import paramiko , pysftp as sftp , shutil
+import paramiko , pysftp as sftp , shutil , socket
 
 import numpy as np
 import pandas as pd
@@ -96,15 +96,18 @@ class check_chatgpt:
             now_day2 = time.strftime("%Y-%m-%d" , time.localtime())
             now_time = time.strftime("%H:%M:%S" , time.localtime())
 
-            sql  = "create table `{0}`(no int not null primary key AUTO_INCREMENT,r_date date null,r_time time null,d_name varchar(100) null,u_file varchar(100) null,f_size varchar(50) null,r_status varchar(50) null)ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci".format(now_day)
+            sql  = "create table `{0}`(no int not null primary key AUTO_INCREMENT,r_date date null,r_time time null,d_name varchar(100) null,u_file varchar(100) null,f_size varchar(50) null,r_host varchar(50) null,r_ip varchar(50) null,r_status varchar(50) null)ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci".format(now_day)
             curr.execute(sql)
             conn.commit()
             
             logging.info(f'create tb : {now_day2} successful.')
 
         except Exception as e:
-            f_size = str(f_size) + str(' MB')
-            sql  = "insert into `{5}`(r_date , r_time , d_name , u_file , r_status , f_size ) value('{0}' , '{1}' , '{2}' , '{3}' , '{4}', '{6}')".format(now_day2 , now_time , dir_name , upload_file , r_status , now_day , f_size)
+            f_size    = str(f_size) + str(' MB')
+            host_name = socket.gethostname()
+            host_ip   = socket.gethostbyname(host_name)
+
+            sql  = "insert into `{5}`(r_date , r_time , d_name , u_file , r_status , f_size , r_host , r_ip) value('{0}' , '{1}' , '{2}' , '{3}' , '{4}' , '{6}' , '{7}' , '{8}')".format(now_day2 , now_time , dir_name , upload_file , r_status , now_day , f_size , host_name , host_ip)
             curr.execute(sql)
             conn.commit()
 
@@ -413,8 +416,6 @@ if __name__ == '__main__':
         #for i in range(1,50):
         #    dir = 'server_' + str(i)
         res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_1'] , upload['upload_file1'])
-        res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_2'] , upload['upload_file2'])
-        res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_3'] , upload['upload_file3'])
         time.sleep(60)
         
         
