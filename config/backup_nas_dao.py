@@ -8,7 +8,7 @@
 import requests , logging , time , pymysql , socket , sys , openai , csv , psutil , speedtest , os
 from variables import *
 from pysnmp.hlapi import *
-import paramiko , pysftp as sftp , shutil , socket
+import paramiko , pysftp as sftp , shutil , socket , pyodbc
 
 import numpy as np
 import pandas as pd
@@ -81,6 +81,125 @@ class check_chatgpt:
 
         finally:
             conn.close()
+
+    #########################
+    # backup_db_BPM_formal
+    #########################
+    def backup_db_BPM_formal(self):
+        try:
+            # time record
+            now_day     = time.strftime("%Y%m%d" , time.localtime())
+            now_time    = time.strftime("%H:%M:%S" , time.localtime())
+            
+
+            ####################
+            #　DB : Agentflow
+            ####################
+            host = '192.168.1.35'
+            db   = 'Agentflow'
+            db2  = 'Docpedia'
+            user = 'HR2BPM'
+            pwd  = 'Otsukatw14001297!'
+            conn_str = f"DRIVER={{SQL Server}};SERVER={host};DATABASE={db};UID={user};PWD={pwd}"
+            
+            connection = pyodbc.connect(conn_str)
+            connection.autocommit = True
+            curr = connection.cursor()
+            
+            sql = f"BACKUP DATABASE [{db}] TO DISK = 'D:\\MSSQL\\MSSQL15.MSSQLSERVER\\MSSQL\\Backup\\{db}_{now_day}.bak'"
+            curr.execute(sql)
+            curr.commit()
+            logging.info(f'{db} database backup finish.')
+
+            curr.close()
+            connection.close()
+
+            ####################
+            #　DB : Docpedia
+            ####################
+            host = '192.168.1.35'
+            db   = 'Agentflow'
+            db2  = 'Docpedia'
+            user = 'HR2BPM'
+            pwd  = 'Otsukatw14001297!'
+            conn_str = f"DRIVER={{SQL Server}};SERVER={host};DATABASE={db};UID={user};PWD={pwd}"
+            
+            connection = pyodbc.connect(conn_str)
+            connection.autocommit = True
+            curr = connection.cursor()
+            
+            sql2 = f"BACKUP DATABASE [{db2}] TO DISK = 'D:\\MSSQL\\MSSQL15.MSSQLSERVER\\MSSQL\\Backup\\{db2}_{now_day}.bak'"
+            curr.execute(sql2)
+            curr.commit()
+            logging.info(f'{db2} database backup finish.')
+            
+            curr.close()
+            connection.close()
+
+        except Exception as e:
+            logging.info('< Error > backup_db_BPM_formal : ' + str(e))
+        finally:
+            pass
+
+
+    #######################
+    # backup_db_BPM_test
+    #######################
+    def backup_db_BPM_test(self):
+        try:
+            # time record
+            now_day     = time.strftime("%Y%m%d" , time.localtime())
+            now_time    = time.strftime("%H:%M:%S" , time.localtime())
+
+            host = '192.168.1.37'
+            db1  = 'Agentflow'
+            db2  = 'Docpedia'
+            user = 'HR2BPM'
+            pwd  = 'Otsukatw14001297!'
+            conn_str = f"DRIVER={{SQL Server}};SERVER={host};DATABASE={db1};UID={user};PWD={pwd}"
+            
+            connection = pyodbc.connect(conn_str)
+            connection.autocommit = True
+            curr = connection.cursor()
+
+            ####################
+            #　DB : Agentflow
+            ####################
+            sql1 = f"BACKUP DATABASE [{db1}] TO DISK = 'D:\\MSSQL\\MSSQL15.MSSQLSERVER\\MSSQL\\Backup\\{db1}_{now_day}.bak'"
+            curr.execute(sql1)
+            curr.commit()
+            print(f'{db1} database backup finish.')
+            
+            curr.close()
+            connection.close()
+
+            ####################
+            #　DB : Docpedia
+            ####################
+            host = '192.168.1.37'
+            db1  = 'Agentflow'
+            db2  = 'Docpedia'
+            user = 'HR2BPM'
+            pwd  = 'Otsukatw14001297!'
+            conn_str = f"DRIVER={{SQL Server}};SERVER={host};DATABASE={db2};UID={user};PWD={pwd}"
+            
+            connection = pyodbc.connect(conn_str)
+            connection.autocommit = True
+            curr = connection.cursor()
+            
+            sql2 = f"BACKUP DATABASE [{db2}] TO DISK = 'D:\\MSSQL\\MSSQL15.MSSQLSERVER\\MSSQL\\Backup\\{db2}_{now_day}.bak'"
+            curr.execute(sql2)
+            curr.commit()
+            print(f'{db2} database backup finish.')
+            
+            curr.close()
+            connection.close()
+
+        except Exception as e:
+            logging.info('< Error > backup_db_BPM_test : ' + str(e))
+        finally:
+            pass
+    
 
     #########################
     # backup_nas_db_record
@@ -397,6 +516,7 @@ if __name__ == '__main__':
     api_key = "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"
     openai.api_key = api_key
 
+    
     res_chat = check_chatgpt()
 
     ####################
@@ -405,17 +525,29 @@ if __name__ == '__main__':
     #
     ####################
     while True:
+        
+        now_day     = time.strftime("%Y%m%d" , time.localtime())
+        
+        res_chat.backup_db_BPM_formal()    
+
         host = '192.168.1.55'
         port = 22
         user = 'admin'
         pwd  = 'ej/ck4vupvu3!'    
 
-        dir    = {'d_1':'server_1' , 'd_2':'server_2' , 'd_3':'server_3'}
-        upload = {'upload_file1':'20230817.mp4','upload_file2':'20230428-PGM.mp4','upload_file3':'20230816.mp4'}
+        dir = {'d_1':'BPM_test' , 'd_2':'BPM_formal'}
+        b_file1 = 'Agendtflow_' + now_day + '.bak'
+        b_file2 = 'Docpedia_' + now_day + '.bak'
         
         #for i in range(1,50):
         #    dir = 'server_' + str(i)
-        res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_1'] , upload['upload_file1'])
+        res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_1'] , b_file1)
+        res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_1'] , b_file2)
+
         time.sleep(60)
-        
+
+
+    
+
+    
         
