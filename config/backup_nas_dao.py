@@ -518,11 +518,12 @@ if __name__ == '__main__':
     
     res_chat = check_chatgpt()
     
-    #################
-    # backup MSSQL
-    #################
+    ##############################################################
+    # backup MSSQL backup MSSQL database : Agentflow , Docpedia
+    ##############################################################
     res_chat.backup_db_BPM_formal()
     
+    '''
     # now day
     now_day = time.strftime("%Y%m%d" , time.localtime())
     b_file1 = 'Agentflow_' + now_day + '.bak'
@@ -543,9 +544,6 @@ if __name__ == '__main__':
             # now day
             now_day = time.strftime("%Y%m%d" , time.localtime())
             
-            # backup MSSQL database : Agentflow , Docpedia
-            res_chat.backup_db_BPM_formal()    
-
             host = '192.168.1.55'
             port = 22
             user = 'admin'
@@ -563,7 +561,7 @@ if __name__ == '__main__':
             time.sleep(600)  
     else:
         logging.info(f"{b_file1} , {b_file2} , 文件不存在。")
-    
+    '''
     
     
 
