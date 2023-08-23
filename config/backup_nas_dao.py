@@ -86,7 +86,8 @@ class check_chatgpt:
             now_day     = time.strftime("%Y%m%d" , time.localtime())
             now_time    = time.strftime("%H:%M:%S" , time.localtime())
             
-
+            print('\n----------------------------------------------------------------------------------------------')
+            
             ####################
             #　DB : Agentflow
             ####################
@@ -105,10 +106,12 @@ class check_chatgpt:
             curr.execute(sql)
             curr.commit()
             logging.info(f'{db}_{now_day}.bak , database backup finish.')
-
+            
             curr.close()
             connection.close()
-
+            
+            print('\n----------------------------------------------------------------------------------------------')
+            
             ####################
             #　DB : Docpedia
             ####################
@@ -117,7 +120,7 @@ class check_chatgpt:
             db2  = 'Docpedia'
             user = 'HR2BPM'
             pwd  = 'Otsukatw14001297!'
-            conn_str = f"DRIVER={{SQL Server}};SERVER={host};DATABASE={db};UID={user};PWD={pwd}"
+            conn_str = f"DRIVER={{SQL Server}};SERVER={host};DATABASE={db2};UID={user};PWD={pwd}"
             
             connection = pyodbc.connect(conn_str)
             connection.autocommit = True
@@ -130,7 +133,9 @@ class check_chatgpt:
             
             curr.close()
             connection.close()
-
+            
+            print('\n----------------------------------------------------------------------------------------------')
+            
         except Exception as e:
             logging.info('< Error > backup_db_BPM_formal : ' + str(e))
         finally:
@@ -417,7 +422,6 @@ class check_chatgpt:
             now_day = time.strftime("%Y-%m-%d" , time.localtime())
             
             cnopts = sftp.CnOpts()
-            #cnopts.hostkeys.load('C:\\Users\\administrator.OTSUKATW\\.ssh\\known_hosts')
             cnopts.hostkeys = None
             
             print('\n----------------------------------------------------------------------------------------------')
@@ -511,38 +515,57 @@ if __name__ == '__main__':
     ####################
     api_key = "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"
     openai.api_key = api_key
-
     
     res_chat = check_chatgpt()
+    
+    #################
+    # backup MSSQL
+    #################
+    res_chat.backup_db_BPM_formal()
+    
+    # now day
+    now_day = time.strftime("%Y%m%d" , time.localtime())
+    b_file1 = 'Agentflow_' + now_day + '.bak'
+    b_file2 = 'Docpedia_' + now_day + '.bak'
 
-    ####################
-    #
-    # upload QSAN NAS
-    #
-    ####################
-    while True:
-        
-        # now day
-        now_day = time.strftime("%Y%m%d" , time.localtime())
-        
-        res_chat.backup_db_BPM_formal()    
+    file_1_path = f"D:\\MSSQL\\MSSQL15.MSSQLSERVER\\MSSQL\\Backup\\otsuka_main_manager\\{b_file1}"
+    file_2_path = f"D:\\MSSQL\\MSSQL15.MSSQLSERVER\\MSSQL\\Backup\\otsuka_main_manager\\{b_file2}"
+    
+    # check .bak backup file exists
+    if os.path.exists(file_1_path) and os.path.exists(file_2_path):
+        ####################
+        #
+        # upload QSAN NAS
+        #
+        ####################
+        while True:
+            
+            # now day
+            now_day = time.strftime("%Y%m%d" , time.localtime())
+            
+            # backup MSSQL database : Agentflow , Docpedia
+            res_chat.backup_db_BPM_formal()    
 
-        host = '192.168.1.55'
-        port = 22
-        user = 'admin'
-        pwd  = 'ej/ck4vupvu3!'    
+            host = '192.168.1.55'
+            port = 22
+            user = 'admin'
+            pwd  = 'ej/ck4vupvu3!'    
 
-        dir = {'d_1':'BPM_test' , 'd_2':'BPM_formal'}
-        b_file1 = 'Agentflow_' + now_day + '.bak'
-        b_file2 = 'Docpedia_' + now_day + '.bak'
-        
-        #for i in range(1,50):
-        #    dir = 'server_' + str(i)
-        res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_2'] , b_file1)
-        res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_2'] , b_file2)
+            dir = {'d_1':'BPM_test' , 'd_2':'BPM_formal'}
+            b_file1 = 'Agentflow_' + now_day + '.bak'
+            b_file2 = 'Docpedia_' + now_day + '.bak'
+            
+            #for i in range(1,50):
+            #    dir = 'server_' + str(i)
+            res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_2'] , b_file1)
+            res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_2'] , b_file2)
 
-        time.sleep(60)
-
+            time.sleep(600)  
+    else:
+        logging.info(f"{b_file1} , {b_file2} , 文件不存在。")
+    
+    
+    
 
     
 
