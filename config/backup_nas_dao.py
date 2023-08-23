@@ -12,11 +12,6 @@ import paramiko , pysftp as sftp , shutil , socket , pyodbc
 
 import numpy as np
 import pandas as pd
-from sklearn.datasets import load_iris
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
 
 #####################################################################################
 #
@@ -106,10 +101,10 @@ class check_chatgpt:
             connection.autocommit = True
             curr = connection.cursor()
             
-            sql = f"BACKUP DATABASE [{db}] TO DISK = 'D:\\MSSQL\\MSSQL15.MSSQLSERVER\\MSSQL\\Backup\\{db}_{now_day}.bak'"
+            sql = f"BACKUP DATABASE [{db}] TO DISK = 'D:\\MSSQL\\MSSQL15.MSSQLSERVER\\MSSQL\\Backup\\otsuka_main_manager\\{db}_{now_day}.bak'"
             curr.execute(sql)
             curr.commit()
-            logging.info(f'{db} database backup finish.')
+            logging.info(f'{db}_{now_day}.bak , database backup finish.')
 
             curr.close()
             connection.close()
@@ -128,10 +123,10 @@ class check_chatgpt:
             connection.autocommit = True
             curr = connection.cursor()
             
-            sql2 = f"BACKUP DATABASE [{db2}] TO DISK = 'D:\\MSSQL\\MSSQL15.MSSQLSERVER\\MSSQL\\Backup\\{db2}_{now_day}.bak'"
+            sql2 = f"BACKUP DATABASE [{db2}] TO DISK = 'D:\\MSSQL\\MSSQL15.MSSQLSERVER\\MSSQL\\Backup\\otsuka_main_manager\\{db2}_{now_day}.bak'"
             curr.execute(sql2)
             curr.commit()
-            logging.info(f'{db2} database backup finish.')
+            logging.info(f'{db2}_{now_day}.bak , database backup finish.')
             
             curr.close()
             connection.close()
@@ -165,10 +160,10 @@ class check_chatgpt:
             ####################
             #　DB : Agentflow
             ####################
-            sql1 = f"BACKUP DATABASE [{db1}] TO DISK = 'D:\\MSSQL\\MSSQL15.MSSQLSERVER\\MSSQL\\Backup\\{db1}_{now_day}.bak'"
+            sql1 = f"BACKUP DATABASE [{db1}] TO DISK = 'D:\\MSSQL\\MSSQL15.MSSQLSERVER\\MSSQL\\Backup\\otsuka_main_manager\\{db1}_{now_day}.bak'"
             curr.execute(sql1)
             curr.commit()
-            print(f'{db1} database backup finish.')
+            print(f'{db1}_{now_day}.bak , database backup finish.')
             
             curr.close()
             connection.close()
@@ -187,10 +182,10 @@ class check_chatgpt:
             connection.autocommit = True
             curr = connection.cursor()
             
-            sql2 = f"BACKUP DATABASE [{db2}] TO DISK = 'D:\\MSSQL\\MSSQL15.MSSQLSERVER\\MSSQL\\Backup\\{db2}_{now_day}.bak'"
+            sql2 = f"BACKUP DATABASE [{db2}] TO DISK = 'D:\\MSSQL\\MSSQL15.MSSQLSERVER\\MSSQL\\Backup\\otsuka_main_manager\\{db2}_{now_day}.bak'"
             curr.execute(sql2)
             curr.commit()
-            print(f'{db2} database backup finish.')
+            print(f'{db2}_{now_day}.bak , database backup finish.')
             
             curr.close()
             connection.close()
@@ -422,6 +417,7 @@ class check_chatgpt:
             now_day = time.strftime("%Y-%m-%d" , time.localtime())
             
             cnopts = sftp.CnOpts()
+            #cnopts.hostkeys.load('C:\\Users\\administrator.OTSUKATW\\.ssh\\known_hosts')
             cnopts.hostkeys = None
             
             print('\n----------------------------------------------------------------------------------------------')
@@ -526,7 +522,8 @@ if __name__ == '__main__':
     ####################
     while True:
         
-        now_day     = time.strftime("%Y%m%d" , time.localtime())
+        # now day
+        now_day = time.strftime("%Y%m%d" , time.localtime())
         
         res_chat.backup_db_BPM_formal()    
 
@@ -536,13 +533,13 @@ if __name__ == '__main__':
         pwd  = 'ej/ck4vupvu3!'    
 
         dir = {'d_1':'BPM_test' , 'd_2':'BPM_formal'}
-        b_file1 = 'Agendtflow_' + now_day + '.bak'
+        b_file1 = 'Agentflow_' + now_day + '.bak'
         b_file2 = 'Docpedia_' + now_day + '.bak'
         
         #for i in range(1,50):
         #    dir = 'server_' + str(i)
-        res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_1'] , b_file1)
-        res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_1'] , b_file2)
+        res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_2'] , b_file1)
+        res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_2'] , b_file2)
 
         time.sleep(60)
 
