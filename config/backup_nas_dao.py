@@ -8,7 +8,7 @@
 import requests , logging , time , pymysql , socket , sys , openai , csv , psutil , speedtest , os
 from variables import *
 from pysnmp.hlapi import *
-import paramiko , pysftp as sftp , shutil , socket , pyodbc
+import paramiko , pysftp as sftp , shutil , socket , pyodbc , zipfile
 
 import numpy as np
 import pandas as pd
@@ -136,6 +136,17 @@ class check_chatgpt:
             
             print('\n----------------------------------------------------------------------------------------------')
             
+            ####################
+            #　attach file
+            ####################
+            zip_attach_file = 'attach_file_' + now_day + '.zip'
+            
+            with zipfile.ZipFile(zip_attach_file , 'w') as zip_file:
+                zip_file.write('C:\\AttachFile' , arcname='AttachFile')
+                logging.info('<msg> zip attach file successful.')
+
+            print('\n----------------------------------------------------------------------------------------------')
+
         except Exception as e:
             logging.info('< Error > backup_db_BPM_formal : ' + str(e))
         finally:
