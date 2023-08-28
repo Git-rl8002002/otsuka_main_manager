@@ -534,7 +534,7 @@ class check_chatgpt:
             #############################################
             # layer 1 - go to QSAN NAS backup document  
             #############################################
-            psftp.chdir('/backup_tmp')
+            psftp.chdir('/backup_temp')
             try:
                 ###########################
                 # layer 2 - by every day 
