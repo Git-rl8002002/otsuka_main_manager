@@ -424,9 +424,9 @@ class check_chatgpt:
             pass
     
     ####################
-    # backup_qsan_nas
+    # backup_qsan_nas2
     ####################
-    def backup_qsan_nas(self , host, port, user, pwd, dir_name , upload_file):
+    def backup_qsan_nas2(self , host, port, user, pwd, dir_name , upload_file):
         
         try:
             # time record
@@ -511,6 +511,95 @@ class check_chatgpt:
 
         finally:
             pass
+
+    ####################
+    # backup_qsan_nas
+    ####################
+    def backup_qsan_nas(self , host, port, user, pwd, dir_name , upload_file):
+        
+        try:
+            # time record
+            now_day = time.strftime("%Y-%m-%d" , time.localtime())
+            
+            cnopts = sftp.CnOpts()
+            cnopts.hostkeys = None
+            
+            print('\n----------------------------------------------------------------------------------------------')
+
+            #########
+            # Sftp
+            #########
+            psftp = sftp.Connection(host=host , username=user , password=pwd , port=port , cnopts=cnopts)
+            
+            #############################################
+            # layer 1 - go to QSAN NAS backup document  
+            #############################################
+            psftp.chdir('/backup_tmp')
+            try:
+                ###########################
+                # layer 2 - by every day 
+                ###########################
+                try: 
+                    psftp.chdir(now_day)
+                    ########################
+                    # layer 3 - by server  
+                    ########################
+                    try:
+                        psftp.chdir(dir_name)
+                        logging.info(f'{dir_name}/{upload_file} - upload starting...')
+                        try:
+                            psftp.remove(upload_file)
+                            psftp.put(upload_file)
+                            logging.info(f'{dir_name}/{upload_file} - upload finish.')
+                            
+                            ### backup nas record mysql
+                            f_size = round((psftp.stat(upload_file).st_size)/1024/1024 , 2)
+                            self.backup_nas_db_record(dir_name , upload_file , f_size , 'ok')
+
+                        except FileNotFoundError:
+                            psftp.put(upload_file)
+                            logging.info(f'{dir_name}/{upload_file} - upload finish.')
+                            
+                            ### backup nas record mysql
+                            f_size = round((psftp.stat(upload_file).st_size)/1024/1024 , 2)
+                            self.backup_nas_db_record(dir_name , upload_file , f_size , 'ok')
+
+                    except FileNotFoundError:
+                        logging.info(f'{dir_name}/{upload_file} - upload starting...') 
+                        psftp.mkdir(dir_name)
+                        psftp.chdir(dir_name)
+                        psftp.put(upload_file)
+                        logging.info(f'{dir_name}/{upload_file} - upload finish.')
+                        
+                        ### backup nas record mysql
+                        f_size = round((psftp.stat(upload_file).st_size)/1024/1024 , 2)
+                        self.backup_nas_db_record(dir_name , upload_file , f_size , 'ok')
+                
+                except FileNotFoundError:
+                    logging.info(f'{dir_name}/{upload_file} - upload starting...')
+                    psftp.mkdir(now_day)
+                    psftp.chdir(now_day)
+                    psftp.mkdir(dir_name)
+                    psftp.chdir(dir_name)
+                    psftp.put(upload_file)
+                    logging.info(f'{dir_name}/{upload_file} - upload finish.')
+                    
+                    ### backup nas record mysql
+                    f_size = round((psftp.stat(upload_file).st_size)/1024/1024 , 2)
+                    self.backup_nas_db_record(dir_name , upload_file , f_size , 'ok')
+            
+            except FileNotFoundError:
+                psftp.mkdir(now_day)
+            
+            psftp.close()
+
+            print('----------------------------------------------------------------------------------------------')
+
+        except Exception as e:
+            logging.info('< Error > backup_qsan_nas :' + str(e))
+
+        finally:
+            pass
                 
 #####################################################################################
 #
@@ -530,12 +619,18 @@ if __name__ == '__main__':
     res_chat = check_chatgpt()
     
     ##############################################################
+    #
     # backup MSSQL backup MSSQL database : Agentflow , Docpedia
+    #
     ##############################################################
     res_chat.backup_db_BPM_formal()
     
-    '''
-    # now day
+
+    ###########################################################################
+    #
+    # backup MSSQL backup MSSQL database : Agentflow , Docpedia , AttachFile
+    #
+    ###########################################################################
     now_day = time.strftime("%Y%m%d" , time.localtime())
     b_file1 = 'Agentflow_' + now_day + '.bak'
     b_file2 = 'Docpedia_' + now_day + '.bak'
@@ -543,36 +638,89 @@ if __name__ == '__main__':
     file_1_path = f"D:\\MSSQL\\MSSQL15.MSSQLSERVER\\MSSQL\\Backup\\otsuka_main_manager\\{b_file1}"
     file_2_path = f"D:\\MSSQL\\MSSQL15.MSSQLSERVER\\MSSQL\\Backup\\otsuka_main_manager\\{b_file2}"
     
-    # check .bak backup file exists
-    if os.path.exists(file_1_path) and os.path.exists(file_2_path):
-        ####################
+    while True:
+        ##################################
         #
-        # upload QSAN NAS
+        # check .bak backup file exists
         #
-        ####################
-        while True:
-            
-            # now day
-            now_day = time.strftime("%Y%m%d" , time.localtime())
-            
-            host = '192.168.1.55'
-            port = 22
-            user = 'admin'
-            pwd  = 'ej/ck4vupvu3!'    
+        ##################################
+        if os.path.exists(file_1_path) and os.path.exists(file_2_path):
+           
+           ####################
+            #
+            # upload QSAN NAS
+            #
+            ####################
+            while True:
+                
+                # now day
+                now_day = time.strftime("%Y%m%d" , time.localtime())
 
-            dir = {'d_1':'BPM_test' , 'd_2':'BPM_formal'}
-            b_file1 = 'Agentflow_' + now_day + '.bak'
-            b_file2 = 'Docpedia_' + now_day + '.bak'
-            
-            #for i in range(1,50):
-            #    dir = 'server_' + str(i)
-            res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_2'] , b_file1)
-            res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_2'] , b_file2)
+                host = '192.168.1.55'
+                port = 22
+                user = 'admin'
+                pwd  = 'ej/ck4vupvu3!'    
 
-            time.sleep(600)  
-    else:
-        logging.info(f"{b_file1} , {b_file2} , 文件不存在。")
-    '''
+                dir = {'d_1':'BPM_test' , 'd_2':'BPM_formal'}
+                b_file1 = 'Agentflow_'  + now_day + '.bak'
+                b_file2 = 'Docpedia_'   + now_day + '.bak'
+                b_file3 = 'AttachFile_' + now_day + '.zip'
+                
+                ####################################
+                #
+                # Agentflow .bak send to QSAN NAS
+                #
+                ####################################
+                res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_2'] , b_file1)
+                #shutil.move(file_1_path , backup_1_path)
+                
+                ###################################
+                #
+                # Docpedia .bak send to QSAN NAS
+                #
+                ###################################
+                res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_2'] , b_file2)
+                #shutil.move(file_2_path , backup_2_path)
+                
+                ######################################
+                #
+                # attach file .zip send to QSAN NAS
+                #
+                ######################################
+                output_path = 'D:\\MSSQL\\MSSQL15.MSSQLSERVER\\MSSQL\\Backup\\otsuka_main_manager\\AttachFile_' + now_day
+                folder_path = 'C:\\AttachFile'
+                
+                shutil.make_archive(output_path, 'zip', folder_path)
+                res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_2'] , b_file3)
+
+                print('\n----------------------------------------------------------------------------------------------')
+                
+                ###################################################################################
+                #
+                # 每天晚上 11:50 Agentflow.bak , Docpedia.bak , AttachFile.zip 丟到 backup (write once) document
+                #
+                ###################################################################################
+                write_once_time = time.strftime("%Y-%m-%d %H:%M" , time.localtime())
+                check_time      = now_day + ' 23:50'
+                
+                if write_once_time == check_time:
+                    
+                    # Agentflow .bak
+                    res_chat.backup_qsan_nas2(host , port , user , pwd , dir['d_2'] , b_file1)
+                    
+                    # Docpedia .bak
+                    res_chat.backup_qsan_nas2(host , port , user , pwd , dir['d_2'] , b_file2)
+                    
+                    # AttachFile .zip
+                    res_chat.backup_qsan_nas(host , port , user , pwd , dir['d_2'] , b_file3)
+                    
+                else:
+                    logging.info('< Msg > backup to write once not this time.')
+                
+                time.sleep(900)  
+        else:
+            logging.info(f"{b_file1} , {b_file2} , 文件不存在。")
+            time.sleep(60)
     
     
 
