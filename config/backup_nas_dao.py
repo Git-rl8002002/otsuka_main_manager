@@ -2,7 +2,7 @@
 
 # Author   : Jason Hung
 # Build    : 20230818
-# update   : 20230818
+# update   : 20230828
 # Function : otsuka backup db to nas 
 
 import requests , logging , time , pymysql , socket , sys , openai , csv , psutil , speedtest , os
