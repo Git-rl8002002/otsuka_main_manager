@@ -678,7 +678,7 @@ if __name__ == '__main__':
     while True:
         res_chat.card_reader_day_data_txt()
         
-        time.sleep(60)
+        time.sleep(120)
         
     
 
