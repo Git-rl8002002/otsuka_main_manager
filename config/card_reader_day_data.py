@@ -55,14 +55,14 @@ class card_reader_day_data:
             ###########################
             # read txt save to MySQL
             ###########################
-            file_path = 'F:/otsuka/Git/otsuka_main_manager/config/' + now_day + '.txt'
+            file_path = 'D:/Card_input/' + now_day + '.txt'
 
             with open(file_path , 'r') as file:
                 line = file.readlines()
 
             for val in line:
                 data = val.split(',')
-                print(f"{data[0]} / {data[1]} / {data[2]} / {data[3]} / {data[4]} / {data[5]} / {data[6]} / {data[7]} / {data[8]}")
+                #print(f"{data[0]} / {data[1]} / {data[2]} / {data[3]} / {data[4]} / {data[5]} / {data[6]} / {data[7]} / {data[8]}")
 
                 s_sql  = f"select * from card_reader_{now_day} where r_date='{data[0]}' and r_time='{data[1]}' and p_id='{data[2]}' and e_name='{data[6]}'"
                 curr.execute(s_sql)
@@ -79,7 +79,8 @@ class card_reader_day_data:
                         a_sql = f"insert into card_reader_{now_day}(r_date , r_time , p_id , e_id , e_name , c_action , c_id , position , c_remark , p_name) value('{data[0]}','{data[1]}','{data[2]}','{data[3]}','{data[6]}','{data[5]}','{data[7]}','{data[4]}','{data[8]}','{p_name[0]}')"
                         curr.execute(a_sql)
 
-                        #logging.info(f'add data to tb : card_reader_{now_day} successful.')
+            logging.info(f'add data to tb : card_reader_{now_day} successful.')
+                
         finally:
             conn.commit()
             conn.close()
@@ -671,10 +672,14 @@ if __name__ == '__main__':
     
     ##############################################################
     #
-    # backup MSSQL backup MSSQL database : Agentflow , Docpedia
+    # insert into card reader data by 1 min
     #
     ##############################################################
-    res_chat.card_reader_day_data_txt()
+    while True:
+        res_chat.card_reader_day_data_txt()
+        
+        time.sleep(60)
+        
     
 
    
